@@ -6,5 +6,3 @@ files.each { |file|
   print "Problem #{problem_num}: " 
   puts `ruby #{file}`
 }
-
-
