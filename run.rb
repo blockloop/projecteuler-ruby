@@ -2,7 +2,6 @@
 
 require 'rubygems'
 require 'thor'
-require 'table_print'
 
 class Runner < Thor
 
@@ -14,22 +13,30 @@ class Runner < Thor
     # Get RB files, excluding this one, sort by number
     files = Dir['**/*'].grep(/\d+\.rb/i).sort{ |a,b| a.scan(/\d+/).first.to_i <=> b.scan(/\d+/).first.to_i }
     files = files.map{ |e| File.basename(e, '.*') }
-    files = files.select{|f| options[:only].include?(f)} unless options[:only].nil?
-    files = files.select{|f| not options[:except].include?(f)} unless options[:except].nil?
+    files = files.find_all{|f| options[:only].include?(f)} unless options[:only].nil?
+    files = files.find_all{|f| not options[:except].include?(f)} unless options[:except].nil?
 
-    # put header
-    # tp Solution.new("", "", "")
+    threads = []
 
-    solutions = files.map { |file|
-      problem_num = File.basename(file, '.*')
-      start = Time.new
-      ans = `ruby #{file}.rb`.strip
-      span = (Time.new - start) * 1000.0
-      span = (sprintf "%.4f ms", span)
-      Solution.new(problem_num,ans,span)
-    }
+    files.each do |file|
 
-    tp solutions
+      threads << Thread.new {
+        problem_num = File.basename(file, '.*')
+        start = Time.new
+        ans = `ruby #{file}.rb`.strip
+        span = (Time.new - start) * 1000.0
+        span = (sprintf "%.4f ms", span)
+        
+        msg = "Problem: #{problem_num}\t"
+        msg+= "Solution: #{ans}".widen(30)
+        msg+= "Timespan: #{span}"
+        puts msg
+      }
+
+    end
+      
+    threads.each(&:join)
+
   end
 
   default_task = :all
@@ -60,7 +67,15 @@ class Solution
   def elapsed; @elapsed end
 end
 
-
+class String
+  def widen(width)
+    wide = self
+    while wide.length < 30
+      wide = wide.gsub(/$/, ' ')
+    end
+    wide
+  end
+end
 
 # !! NOTHING BELOW THIS
 #
