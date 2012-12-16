@@ -4,4 +4,12 @@
 
 require './prime.rb'
 
-puts (2..2000000).find_all(&:prime?).reduce(:+)
+# puts (2..2000000).find_all(&:prime?).reduce(:+)
+
+total = 0
+
+(2..2000000).each { |n| 
+  total+=n if n.prime?
+}
+
+puts total
